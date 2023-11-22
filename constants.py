@@ -1,0 +1,8 @@
+LINES_PER_SEQUENCE = 4
+ACCESSIBLE_LABEL = 1
+NOT_ACCESSIBLE_LABEL = 0
+DATA_ZIP_FILE = "Files.zip"
+DATA_DIR = DATA_ZIP_FILE.strip(".zip")
+ACCESSSIBLE_FILE = f"{DATA_DIR}/accessible.fasta"
+NOT_ACCESSIBLE_FILE = f"{DATA_DIR}/notaccessible.fasta"
+TEST_FILE = f"{DATA_DIR}/test.fasta"

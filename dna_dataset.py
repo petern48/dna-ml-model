@@ -37,7 +37,7 @@ class DNADataset(torch.utils.data.Dataset):
                     sequence += next(f)
 
                 # append the sequence and label
-                sequence_list.append(sequence)
+                sequence_list.append(sequence.rstrip())
                 label_list.append(label)
         
         return seq_count

@@ -1,5 +1,8 @@
 # Byte-compiled / optimized / DLL files
 Files/
+pretrained/
+wandb/
+runs/
 __pycache__/
 *.py[cod]
 *$py.class

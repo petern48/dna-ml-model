@@ -1,4 +1,16 @@
 import torch
+from sklearn.preprocessing import LabelBinarizer
+
+bases = ["A", "C", "G", "T"]
+lb = LabelBinarizer()
+lb.fit_transform(bases)    
+
+def label_encode(sequence):
+    """Apply one hot encoding on a string input"""
+    return lb.transform(list(sequence))  # numpy array
+
+def kmer_encode():
+    pass
 
 def compute_accuracy(outputs, labels):
     """

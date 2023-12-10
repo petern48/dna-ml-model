@@ -84,7 +84,7 @@ def load_CNNModel(model_save_path):
     checkpoint = torch.load(model_save_path)
     model = CNNModel(
         embed_dim=checkpoint["embed_dim"],
-
+        kernel_size=checkpoint["kernel_size"]
     )
     model.load_state_dict(checkpoint['state_dict'])
     return model

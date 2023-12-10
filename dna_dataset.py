@@ -13,9 +13,6 @@ class TestDataset(torch.utils.data.Dataset):
         self.sequences = []
         self.ids = []
 
-        # bases = ["A", "C", "G", "T"]
-        # self.lb = LabelBinarizer()
-        # self.lb.fit_transform(bases)        
         count = self.read_data_file(data_path)
 
         assert(count == len(self.ids) and count == len(self.sequences))

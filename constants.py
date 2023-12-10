@@ -4,10 +4,12 @@ NOT_ACCESSIBLE_LABEL = 0
 DATA_ZIP_FILE = "Files.zip"
 DATA_DIR = DATA_ZIP_FILE.strip(".zip")
 ACCESSIBLE_FILE = f"{DATA_DIR}/accessible.fasta"
-NOT_ACCESSIBLE_FILE = f"{DATA_DIR}/notaccessible.fasta"
+# NOT_ACCESSIBLE_FILE = f"{DATA_DIR}/notaccessible.fasta"
+NOT_ACCESSIBLE_FILE = f"{DATA_DIR}/reduced_nonaccessible.fasta"
 TEST_FILE = f"{DATA_DIR}/test.fasta"
 VALIDATION_SPLIT = 0.15
 PRETRAINED_DIR = "pretrained"
+SOLUTION_FILE = "predictions.csv"
 
 
 # TRAINING LOOP
@@ -24,4 +26,3 @@ LEARNING_RATE = 0.05  # OR .0005
 # filters = 250  #number of filters in your Convnet
 # kernel_size = 3  # a window size of 3 tokens
 # hidden_dims = 250  # number of neurons at the normal feedforward NN
-

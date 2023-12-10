@@ -34,7 +34,7 @@ class DNADataset(torch.utils.data.Dataset):
         with open(data_file, "r") as f:
             while True:
                 try:
-                    id = next(f).rstrip()   # >accessible47239
+                    id = next(f)[1:].rstrip()   # >accessible47239  or seq1
                 except StopIteration:
                     break
                 seq_count += 1
@@ -88,4 +88,4 @@ class DNADataset(torch.utils.data.Dataset):
 
 # For testing can just run python dna_dataset.py
 if __name__ == "__main__":
-    DNADataset(ACCESSIBLE_FILE, NOT_ACCESSIBLE_FILE)
+    DNADataset(TEST_FILE, TEST_FILE)

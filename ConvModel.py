@@ -49,7 +49,7 @@ class CNNModel(torch.nn.Module):
     
     def forward(self, sequence_input):
         x = self.relu(self.Conv1(sequence_input))
-        x = self.batch_norm(x)
+        # x = self.batch_norm(x)
         x = self.pool(x)
 
         x = self.relu(self.Conv2(x))
@@ -73,19 +73,18 @@ class CNNModel(torch.nn.Module):
 
 def save_CNNModel(model_save_path, model):
     checkpoint = {
-        "embed_dim": model.embed_dim,
         "kernel_size": model.kernel_size,
+        "embed_dim": model.embed_dim,
         "num_filters1": model.num_filters1,
         "num_filters2": model.num_filters2,
         "pool_kernel_size": model.pool_kernel_size,
         "hidden_dense1": model.hidden_dense1,
         "hidden_dense2": model.hidden_dense2,
-        "dropout_rate" : model.dropout_rate,
+        "dropout_rate_Dense" : model.dropout_rate_Dense,
 
         'state_dict': model.state_dict()
     }
     torch.save(checkpoint, model_save_path)
-
 
 def load_CNNModel(model_save_path):
     checkpoint = torch.load(model_save_path)
@@ -97,7 +96,7 @@ def load_CNNModel(model_save_path):
         pool_kernel_size=checkpoint["pool_kernel_size"],
         hidden_dense1=checkpoint["hidden_dense1"],
         hidden_dense2=checkpoint["hidden_dense2"],
-        dropout_rate=checkpoint["dropout_rate"]
+        dropout_rate_Dense=checkpoint["dropout_rate_Dense"]
     )
     model.load_state_dict(checkpoint['state_dict'])
     return model

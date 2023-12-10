@@ -7,6 +7,7 @@ class CNNModel(torch.nn.Module):
                  hidden_dense2, dropout_rate):
         super().__init__()
 
+        self.seq_length = 200
         # maybe use 1d
         # output size (N-F)/S +1 where N size image, F size filter, S size stride
         # could use padding to get same size output
@@ -23,17 +24,18 @@ class CNNModel(torch.nn.Module):
         self.dropout_rate = dropout_rate
 
 
-        self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size)  #in_channel=1, out_channels=128, kernel_size=2)
+        self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=0)  #in_channel=1, out_channels=128, kernel_size=2)
         
         self.pool = nn.MaxPool1d(self.pool_kernel_size)
 
-        self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size)
+        self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size, padding=1)
 
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
 
 
         # dense_input = batchsize * num_filters2 * 
-        dense_input = 3136
+        dense_input = self.num_filters2 * int(self.seq_length / (2 * self.pool_kernel_size))
+        print(dense_input)
         self.linear1 = nn.Linear(dense_input, self.hidden_dense1)
         self.linear2 = nn.Linear(self.hidden_dense1, self.hidden_dense2)
 
@@ -109,11 +111,23 @@ if __name__ == "__main__":
     encoded = lb.transform(list(sequence))
     encoded = np.transpose(encoded)
     encoded = np.tile(encoded, (BATCH_SIZE, 1, 1))  # stack batch_size copies of encoding together
+    encoded = torch.Tensor(encoded)
     # print(encoded.shape)
-    model = CNNModel(embed_dim=4)
-    # model(torch.Tensor(encoded))
+    model = CNNModel(
+                    kernel_size=2,
+                    embed_dim=4,
+                    num_filters1=128,
+                    num_filters2=64,
+                    pool_kernel_size=2,
+                    hidden_dense1=128,
+                    hidden_dense2=64,
+                    dropout_rate=0.2
+    )
+    x = model(encoded)
+    model(torch.Tensor(encoded))
+    raise
     train_dataset = DNADataset(ACCESSIBLE_FILE, ACCESSIBLE_FILE)
-    model = CNNModel(embed_dim=4)
+    # model = CNNModel(embed_dim=4)
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=BATCH_SIZE, shuffle=True
     )

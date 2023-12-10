@@ -4,7 +4,7 @@ from torch import nn
 # https://towardsdatascience.com/nlp-with-cnns-a6aa743bdc1e#:~:text=CNNs%20can%20be%20used%20for,important%20for%20any%20learning%20algorithm.
 class CNNModel(torch.nn.Module):
     def __init__(self, kernel_size, embed_dim, num_filters1, num_filters2, pool_kernel_size, hidden_dense1,
-                 hidden_dense2, dropout_rate):
+                 hidden_dense2, dropout_rate_Dense):
         super().__init__()
 
         self.seq_length = 200
@@ -21,7 +21,7 @@ class CNNModel(torch.nn.Module):
 
         self.hidden_dense1 = hidden_dense1
         self.hidden_dense2 = hidden_dense2
-        self.dropout_rate = dropout_rate
+        self.dropout_rate_Dense = dropout_rate_Dense
 
 
         self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=0)  #in_channel=1, out_channels=128, kernel_size=2)
@@ -35,19 +35,21 @@ class CNNModel(torch.nn.Module):
 
         # dense_input = batchsize * num_filters2 * 
         dense_input = self.num_filters2 * int(self.seq_length / (2 * self.pool_kernel_size))
-        print(dense_input)
         self.linear1 = nn.Linear(dense_input, self.hidden_dense1)
         self.linear2 = nn.Linear(self.hidden_dense1, self.hidden_dense2)
 
         self.linear3 = nn.Linear(self.hidden_dense2, 1)
 
-        self.dropout = nn.Dropout(self.dropout_rate)
+        # self.dropout_Conv = nn.Dropout(self.dropout_rate_Conv)
+        self.batch_norm = nn.BatchNorm1d(128)
+        self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
         self.relu = nn.functional.relu
         self.sigmoid = nn.Sigmoid()
 
     
     def forward(self, sequence_input):
         x = self.relu(self.Conv1(sequence_input))
+        x = self.batch_norm(x)
         x = self.pool(x)
 
         x = self.relu(self.Conv2(x))
@@ -58,11 +60,13 @@ class CNNModel(torch.nn.Module):
         # print("After flatten", x.shape)
 
         x = self.linear1(x)
-        x = self.dropout(x)
+        x = self.dropout_Dense(x)
 
         x = self.linear2(x)
+        x = self.dropout_Dense(x)
 
         x = self.linear3(x)
+        x = self.dropout_Dense(x)
 
         return self.sigmoid(x)  # return value between 0 and 1
 
@@ -121,7 +125,7 @@ if __name__ == "__main__":
                     pool_kernel_size=2,
                     hidden_dense1=128,
                     hidden_dense2=64,
-                    dropout_rate=0.2
+                    dropout_rate_Dense=0.5
     )
     x = model(encoded)
     model(torch.Tensor(encoded))

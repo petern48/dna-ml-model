@@ -13,16 +13,8 @@ SOLUTION_FILE = "predictions.csv"
 
 
 # TRAINING LOOP
-EPOCHS = 10
+EPOCHS = 100
 BATCH_SIZE = 100  # 64
 N_EVAL = 600
-LEARNING_RATE = 0.05  # OR .0005
+LEARNING_RATE = 0.05  # OR .0005  # originally 0.05
 # loss_fn and optimizer can be modified in main.ipynb
-
-
-
-# CNN Model
-# embedding_dims = 300 #Length of the token vectors
-# filters = 250  #number of filters in your Convnet
-# kernel_size = 3  # a window size of 3 tokens
-# hidden_dims = 250  # number of neurons at the normal feedforward NN

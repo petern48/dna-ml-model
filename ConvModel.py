@@ -3,28 +3,29 @@ from torch import nn
 
 # https://towardsdatascience.com/nlp-with-cnns-a6aa743bdc1e#:~:text=CNNs%20can%20be%20used%20for,important%20for%20any%20learning%20algorithm.
 class CNNModel(torch.nn.Module):
-    def __init__(self, kernel_size, embed_dim):
+    def __init__(self, kernel_size, embed_dim, num_filters1, num_filters2, pool_kernel_size, hidden_dense1,
+                 hidden_dense2, dropout_rate):
         super().__init__()
 
         # maybe use 1d
         # output size (N-F)/S +1 where N size image, F size filter, S size stride
         # could use padding to get same size output
         self.embed_dim = embed_dim
-        self.kernel_size = 2
+        self.kernel_size = kernel_size
 
-        self.num_filters1 = 128
-        self.num_filters2 = 64
+        self.num_filters1 = num_filters1
+        self.num_filters2 = num_filters2
 
-        self.pool_kernel_size = 2
+        self.pool_kernel_size = pool_kernel_size
 
-        self.hidden_dense1 = 128
-        self.hidden_dense2 = 64
-        self.dropout_rate = 0.2
+        self.hidden_dense1 = hidden_dense1
+        self.hidden_dense2 = hidden_dense2
+        self.dropout_rate = dropout_rate
 
 
         self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size)  #in_channel=1, out_channels=128, kernel_size=2)
         
-        self.pool1 = nn.MaxPool1d(self.pool_kernel_size)
+        self.pool = nn.MaxPool1d(self.pool_kernel_size)
 
         self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size)
 
@@ -45,10 +46,10 @@ class CNNModel(torch.nn.Module):
     
     def forward(self, sequence_input):
         x = self.relu(self.Conv1(sequence_input))
-        x = self.pool1(x)
+        x = self.pool(x)
 
         x = self.relu(self.Conv2(x))
-        x = self.pool1(x)
+        x = self.pool(x)
 
         x = self.flatten(x)  #, start_dim=1)  # start flattening after BATCH_SIZE dim
 
@@ -84,7 +85,13 @@ def load_CNNModel(model_save_path):
     checkpoint = torch.load(model_save_path)
     model = CNNModel(
         embed_dim=checkpoint["embed_dim"],
-        kernel_size=checkpoint["kernel_size"]
+        kernel_size=checkpoint["kernel_size"],
+        num_filters1=checkpoint["num_filters1"],
+        num_filters2=checkpoint["num_filters2"],
+        pool_kernel_size=checkpoint["pool_kernel_size"],
+        hidden_dense1=checkpoint["hidden_dense1"],
+        hidden_dense2=checkpoint["hidden_dense2"],
+        dropout_rate=checkpoint["dropout_rate"]
     )
     model.load_state_dict(checkpoint['state_dict'])
     return model

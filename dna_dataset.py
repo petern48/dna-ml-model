@@ -4,6 +4,55 @@ from constants import *
 import sys
 from sklearn.preprocessing import LabelBinarizer
 import numpy as np
+import utils
+
+# Felt lazy so i copy and pasted rather than reworked the dataset for inheritance
+class TestDataset(torch.utils.data.Dataset):
+    def __init__(self, data_path):
+        random.seed(1)
+        self.sequences = []
+        self.ids = []
+
+        # bases = ["A", "C", "G", "T"]
+        # self.lb = LabelBinarizer()
+        # self.lb.fit_transform(bases)        
+        count = self.read_data_file(data_path)
+
+        assert(count == len(self.ids) and count == len(self.sequences))
+
+    def read_data_file(self, data_file):
+        seq_count = 0
+        with open(data_file, "r") as f:
+            while True:
+                try:
+                    id = next(f)[1:].rstrip()   # accessible47239  or seq1
+                except StopIteration:
+                    break
+                seq_count += 1
+                sequence = ""
+
+                for _ in range(LINES_PER_SEQUENCE):  # read the 4 lines of dna sequence
+                    sequence += next(f).rstrip()  # Collapse to one sequence
+
+                sequence = utils.label_encode(sequence)  # input a string sequence
+                sequence = np.transpose(sequence)
+
+                self.sequences.append(torch.Tensor(sequence))  # rstrip()
+                self.ids.append(id)
+        return seq_count
+
+
+    def __getitem__(self, i):
+        """Gets the ith sequence from the dataset"""
+        batch = {
+            "sequences": self.sequences[i],
+            "ids": self.ids[i]
+        }
+        return batch
+
+    def __len__(self):
+        return len(self.sequences)
+
 
 class DNADataset(torch.utils.data.Dataset):
     def __init__(self, acc_data_path, not_acc_data_path):
@@ -34,44 +83,32 @@ class DNADataset(torch.utils.data.Dataset):
         with open(data_file, "r") as f:
             while True:
                 try:
-                    id = next(f)[1:].rstrip()   # >accessible47239  or seq1
+                    id = next(f)[1:].rstrip()   # accessible47239  or seq1
                 except StopIteration:
                     break
                 seq_count += 1
                 sequence = ""
 
-
                 for _ in range(LINES_PER_SEQUENCE):  # read the 4 lines of dna sequence
                     sequence += next(f).rstrip()  # Collapse to one sequence
 
-                sequence = self.label_encode(sequence)  # input a string sequence
+                sequence = utils.label_encode(sequence)  # input a string sequence
                 sequence = np.transpose(sequence)
                 # append the sequence and label
 
-                self.sequences.append(torch.Tensor(sequence))  #rstrip()
+                self.sequences.append(torch.Tensor(sequence))
                 self.labels.append(label)
                 self.ids.append(id)
-        
+
         return seq_count
 
-    
+
     def shuffle_lists(self, list1, list2):
         zipped = list(zip(list1, list2))
         random.shuffle(zipped)
         list1, list2 = zip(*zipped)
         return list(list1), list(list2)
 
-    
-    def label_encode(self, sequence):
-        """Apply one hot encoding"""
-
-        encoded_sequence = self.lb.transform(list(sequence))
-
-        return encoded_sequence  # numpy array
-
-
-    def kmer_encode(self):
-        pass
 
     def __getitem__(self, i):
         """Gets the ith sequence from the dataset"""

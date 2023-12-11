@@ -22,7 +22,7 @@ class CNNModel(torch.nn.Module):
         # torch.nn.Embedding(num_embeddings, embedding_dim)
 
         self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=1)  #in_channel=1, out_channels=128, kernel_size=2)
-        self.pool = nn.MaxPool1d(self.pool_kernel_size, stride=self.pool_kernel_size)
+        self.pool = nn.MaxPool1d(self.pool_kernel_size) # stride=self.pool_kernel_size)  # led to worse results
         self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size, padding=1)
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
 

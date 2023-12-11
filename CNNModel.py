@@ -12,21 +12,17 @@ class CNNModel(torch.nn.Module):
         # could use padding to get same size output
         self.embed_dim = embed_dim
         self.kernel_size = kernel_size
-
         self.num_filters1 = num_filters1
         self.num_filters2 = num_filters2
-
         self.pool_kernel_size = pool_kernel_size
-
         self.hidden_dense1 = hidden_dense1
         self.hidden_dense2 = hidden_dense2
         self.dropout_rate_Dense = dropout_rate_Dense
 
-
         # torch.nn.Embedding(num_embeddings, embedding_dim)
 
-        self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=0)  #in_channel=1, out_channels=128, kernel_size=2)
-        self.pool = nn.MaxPool1d(self.pool_kernel_size)
+        self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=1)  #in_channel=1, out_channels=128, kernel_size=2)
+        self.pool = nn.MaxPool1d(self.pool_kernel_size, stride=self.pool_kernel_size)
         self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size, padding=1)
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
 
@@ -38,7 +34,7 @@ class CNNModel(torch.nn.Module):
         self.linear3 = nn.Linear(self.hidden_dense2, 1)
 
         # self.dropout_Conv = nn.Dropout(self.dropout_rate_Conv)
-        self.batch_norm = nn.BatchNorm1d(128)
+        self.batch_norm = nn.BatchNorm1d(128)  # num_filters1 i think
         self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
         self.relu = nn.functional.relu
         self.sigmoid = nn.Sigmoid()
@@ -46,7 +42,6 @@ class CNNModel(torch.nn.Module):
     
     def forward(self, x):
         """x is sequence input"""
-        print(x.shape)
         x = self.relu(self.Conv1(x))
 
         # x = self.batch_norm(x)
@@ -127,6 +122,7 @@ if __name__ == "__main__":
                     dropout_rate_Dense=0.5
     )
     x = model(encoded)
+    print(x.shape)
     raise
     train_dataset = DNADataset(ACCESSIBLE_FILE, ACCESSIBLE_FILE)
     # model = CNNModel(embed_dim=4)

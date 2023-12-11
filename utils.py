@@ -1,16 +1,46 @@
 import torch
 from sklearn.preprocessing import LabelBinarizer
+import itertools
+
+from gensim.models import Word2Vec
+
+
 
 bases = ["A", "C", "G", "T"]
 lb = LabelBinarizer()
 lb.fit_transform(bases)    
 
+
 def label_encode(sequence):
     """Apply one hot encoding on a string input"""
     return lb.transform(list(sequence))  # numpy array
 
-def kmer_encode():
-    pass
+
+def kmer_embedding_encode(sequence, k):
+    """
+    Look into for word2vec:
+    https://github.com/sw1/16s_embeddings/tree/master/code
+    Trained: dna2vec: https://github.com/pnpnpn/dna2vec 
+    """
+    kmers_list = get_kmers(sequence, k)
+
+
+
+def get_kmers(sequence, k=6):
+    """Source: https://www.reddit.com/r/learnpython/comments/16pjoz2/create_kmers_from_a_sequence/"""
+    def windowed(iterable, n):
+        its = itertools.tee(iterable, n)
+        for idx, it in enumerate(its):
+            for _ in range(idx):
+                next(it)
+        return zip(*its)
+    
+    return [''.join(l) for l in windowed(sequence, k)]
+
+if __name__=="__main__":
+    x= get_kmers("abcdef", 2)
+    print(x)
+
 
 def compute_accuracy(outputs, labels):
     """

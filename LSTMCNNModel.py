@@ -26,7 +26,9 @@ class LSTMCNNModel(torch.nn.Module):
         # c_0 shape (1or2 * num_layers, batchsize, hidden size)
         dense_input_size = int(self.seq_length / (2 * pool_kernel_size))
         self.linear = nn.Linear(dense_input_size, 1)
+        self.dropout_Dense = nn.Dropout(dropout_rate_Dense)
 
+        self.sigmoid = nn.Sigmoid()
         # maybe use 1d
         # output size (N-F)/S +1 where N size image, F size filter, S size stride
         # could use padding to get same size output
@@ -46,17 +48,23 @@ class LSTMCNNModel(torch.nn.Module):
     def forward(self, x):
         """sequence_input"""
         # cnn input shape (batch_size, channels/embed dims, seq length)
+        print(x.shape)
         x = self.cnn(x)
-
+        print(x.shape)
         x = x.permute(0, 2, 1)
-
+        print(x.shape)
+        assert not torch.isnan(x).any()
         # permute to (batch_size, seq_len, input_size)
         x, (hn, cn) = self.lstm(x)
-
+        assert not torch.isnan(x).any()
+        print(x.shape)
         x = x.flatten(start_dim=1)
-
+        print(x.shape)
         x = self.linear(x)
-        return x
+        print(x.shape)
+        x = self.dropout_Dense(x)
+
+        return self.sigmoid(x)
 
 
 # def save_CNNModel(model_save_path, model):
@@ -103,6 +111,7 @@ if __name__ == "__main__":
     encoded = np.transpose(encoded)
     encoded = np.tile(encoded, (BATCH_SIZE, 1, 1))  # stack batch_size copies of encoding together
     encoded = torch.Tensor(encoded)
+    print("input shape", encoded.shape)
     model = LSTMCNNModel(
                     kernel_size=2,
                     embed_dim=4,

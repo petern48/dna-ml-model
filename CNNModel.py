@@ -8,7 +8,6 @@ class CNNModel(torch.nn.Module):
         super().__init__()
 
         self.seq_length = 200
-        # maybe use 1d
         # output size (N-F)/S +1 where N size image, F size filter, S size stride
         # could use padding to get same size output
         self.embed_dim = embed_dim
@@ -24,14 +23,12 @@ class CNNModel(torch.nn.Module):
         self.dropout_rate_Dense = dropout_rate_Dense
 
 
+        # torch.nn.Embedding(num_embeddings, embedding_dim)
+
         self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=0)  #in_channel=1, out_channels=128, kernel_size=2)
-        
         self.pool = nn.MaxPool1d(self.pool_kernel_size)
-
         self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size, padding=1)
-
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
-
 
         # dense_input = batchsize * num_filters2 * 
         dense_input = self.num_filters2 * int(self.seq_length / (2 * self.pool_kernel_size))
@@ -47,8 +44,11 @@ class CNNModel(torch.nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     
-    def forward(self, sequence_input):
-        x = self.relu(self.Conv1(sequence_input))
+    def forward(self, x):
+        """x is sequence input"""
+        print(x.shape)
+        x = self.relu(self.Conv1(x))
+
         # x = self.batch_norm(x)
         x = self.pool(x)
 
@@ -127,7 +127,6 @@ if __name__ == "__main__":
                     dropout_rate_Dense=0.5
     )
     x = model(encoded)
-    model(torch.Tensor(encoded))
     raise
     train_dataset = DNADataset(ACCESSIBLE_FILE, ACCESSIBLE_FILE)
     # model = CNNModel(embed_dim=4)

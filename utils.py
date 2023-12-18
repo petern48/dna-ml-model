@@ -3,6 +3,7 @@ from sklearn.preprocessing import LabelBinarizer
 import itertools
 
 from gensim.models import Word2Vec
+from torcheval.metrics.functional import multiclass_f1_score
 
 
 
@@ -62,13 +63,31 @@ def evaluate(val_loader, model, loss_fn, device):
     """
     Computes the loss and accuracy of a model on the validation dataset.
     """
+
+    total_loss = 0.0
+    n_total = 0.0
+    n_correct = 0.0
+    total_outputs = torch.empty(0).to(device)
+    total_labels = torch.empty(0).to(device)
+
     for batch in val_loader:
         val_samples, val_labels = batch['sequences'].to(device), batch['labels'].to(device)
 
         outputs = model(val_samples)
         val_labels = val_labels.reshape(-1, 1).float()
 
-        val_loss = loss_fn(outputs, val_labels).item()  # change tensor to single val
-        val_accuracy = compute_accuracy(outputs, val_labels)
+        # val_loss = loss_fn(outputs, val_labels).item()  # change tensor to single val
+        # val_accuracy = compute_accuracy(outputs, val_labels)
+        total_outputs = torch.cat((total_outputs, outputs))
+        total_labels = torch.cat((total_labels, val_labels))
 
-    return val_loss, val_accuracy
+        total_loss += loss_fn(outputs, val_labels).item()  # change tensor to single val
+        n_correct += (torch.round(outputs) == val_labels).sum().item()
+        n_total += len(outputs)
+
+    val_accuracy = n_correct / n_total
+
+    # TODO: f1 score outputs all 0s
+    f1_score = multiclass_f1_score(total_outputs.flatten(), total_labels.flatten())
+
+    return total_loss, val_accuracy, f1_score

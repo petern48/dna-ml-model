@@ -16,5 +16,5 @@ SOLUTION_FILE = "predictions.csv"
 EPOCHS = 100
 BATCH_SIZE = 100  # 64
 N_EVAL = 600
-LEARNING_RATE = 0.01  # OR .0005  # originally 0.05
+LEARNING_RATE = 0.001  # OR .0005  # originally 0.05
 # loss_fn and optimizer can be modified in main.ipynb

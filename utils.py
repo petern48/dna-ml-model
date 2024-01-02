@@ -3,8 +3,8 @@ from sklearn.preprocessing import LabelBinarizer
 import itertools
 
 from gensim.models import Word2Vec
-from torcheval.metrics.functional import multiclass_f1_score
-
+# from torcheval.metrics.functional import multiclass_f1_score
+from torchmetrics.functional import f1_score
 
 
 bases = ["A", "C", "G", "T"]
@@ -37,10 +37,7 @@ def get_kmers(sequence, k=6):
         return zip(*its)
     
     return [''.join(l) for l in windowed(sequence, k)]
-
-if __name__=="__main__":
-    x= get_kmers("abcdef", 2)
-    print(x)
+    # working, returns list of substrings
 
 
 def compute_accuracy(outputs, labels):
@@ -87,7 +84,8 @@ def evaluate(val_loader, model, loss_fn, device):
 
     val_accuracy = n_correct / n_total
 
-    # TODO: f1 score outputs all 0s
-    f1_score = multiclass_f1_score(total_outputs.flatten(), total_labels.flatten())
+    # f1_score = multiclass_f1_score(total_outputs.flatten(), total_labels.flatten())  # f1 score outputs all 0s
+    f1 = f1_score(total_outputs.flatten(), total_labels.flatten(), task="binary", num_classes=2).item()
 
-    return total_loss, val_accuracy, f1_score
+    return total_loss, val_accuracy, f1
+

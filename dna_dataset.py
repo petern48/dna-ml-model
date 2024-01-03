@@ -5,6 +5,8 @@ import sys
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
 import numpy as np
 # import utils
+import pandas as pd
+
 
 # Felt lazy so i copy and pasted rather than reworked the dataset for inheritance
 class TestDataset(torch.utils.data.Dataset):
@@ -61,9 +63,8 @@ class DNADataset(torch.utils.data.Dataset):
         random.seed(1)  # for consistent results
         self.accessible_count = 0
         self.not_accessible_count = 0
-        self.sequences = []
+        self.sequences = []  # convert to regular lists later? not self.list
         self.labels = []
-        self.ids = []
 
         bases = ["A", "C", "G", "T"]
         self.lb = LabelBinarizer()
@@ -75,6 +76,11 @@ class DNADataset(torch.utils.data.Dataset):
         assert(self.accessible_count + self.not_accessible_count == len(self.sequences))
 
         self.sequences, self.labels = self.shuffle_lists(self.sequences, self.labels)
+
+        self.df = pd.DateFrame({
+            "sequences":self.sequences,
+            "labels":self.labels
+        })
 
 
     def read_data_file(self, data_file, accessible=True):
@@ -100,7 +106,7 @@ class DNADataset(torch.utils.data.Dataset):
 
                 self.sequences.append(torch.Tensor(sequence))
                 self.labels.append(label)
-                self.ids.append(id)
+                # self.ids.append(id)
 
         return seq_count
 
@@ -114,15 +120,17 @@ class DNADataset(torch.utils.data.Dataset):
 
     def __getitem__(self, i):
         """Gets the ith sequence from the dataset"""
+        row = self.df.iloc[i]
         batch = {
-            "sequences": self.sequences[i],
-            "labels":self.labels[i]
+            "sequences": row["sequences"],
+            "labels": row["labels"]
         }
         return batch
 
 
     def __len__(self):
-        return len(self.labels)
+        # return len(self.labels)
+        return len(self.df.index)
 
 
 # For testing can just run python dna_dataset.py

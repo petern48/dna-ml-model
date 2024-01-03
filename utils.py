@@ -56,7 +56,7 @@ def evaluate(val_loader, model, loss_fn, device):
     total_labels = torch.empty(0).to(device)
 
     for batch in val_loader:
-        val_samples, val_labels = batch['sequences'].to(device), batch['labels'].to(device)
+        val_samples, val_labels = batch['sequence'].to(device), batch['label'].to(device)
 
         outputs = model(val_samples)
         val_labels = val_labels.reshape(-1, 1).float()

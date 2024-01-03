@@ -7,11 +7,11 @@ import numpy as np
 # import utils
 import pandas as pd
 
+rand = random.Random(1)
 
 # Felt lazy so i copy and pasted rather than reworked the dataset for inheritance
 class TestDataset(torch.utils.data.Dataset):
     def __init__(self, data_path):
-        random.seed(1)
         self.sequences = []
         self.ids = []
 
@@ -60,7 +60,6 @@ class TestDataset(torch.utils.data.Dataset):
 
 class DNADataset(torch.utils.data.Dataset):
     def __init__(self, acc_data_path, not_acc_data_path):
-        random.seed(1)  # for consistent results
         self.accessible_count = 0
         self.not_accessible_count = 0
         self.sequences = []  # convert to regular lists later? not self.list
@@ -113,7 +112,7 @@ class DNADataset(torch.utils.data.Dataset):
 
     def shuffle_lists(self, list1, list2):
         zipped = list(zip(list1, list2))
-        random.shuffle(zipped)
+        rand.shuffle(zipped)
         list1, list2 = zip(*zipped)
         return list(list1), list(list2)
 

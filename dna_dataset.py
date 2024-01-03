@@ -2,9 +2,9 @@ import torch
 import random
 from constants import *
 import sys
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
 import numpy as np
-import utils
+# import utils
 
 # Felt lazy so i copy and pasted rather than reworked the dataset for inheritance
 class TestDataset(torch.utils.data.Dataset):
@@ -12,6 +12,11 @@ class TestDataset(torch.utils.data.Dataset):
         random.seed(1)
         self.sequences = []
         self.ids = []
+
+        bases = ["A", "C", "G", "T"]
+        self.lb = LabelBinarizer()
+        # self.lb = OneHotEncoder
+        self.lb.fit_transform(bases)
 
         count = self.read_data_file(data_path)
 
@@ -31,7 +36,7 @@ class TestDataset(torch.utils.data.Dataset):
                 for _ in range(LINES_PER_SEQUENCE):  # read the 4 lines of dna sequence
                     sequence += next(f).rstrip()  # Collapse to one sequence
 
-                sequence = utils.label_encode(sequence)  # input a string sequence
+                sequence = self.lb.transform(list(sequence))  # input a string sequence
                 sequence = np.transpose(sequence)
 
                 self.sequences.append(torch.Tensor(sequence))  # rstrip()
@@ -89,7 +94,7 @@ class DNADataset(torch.utils.data.Dataset):
                 for _ in range(LINES_PER_SEQUENCE):  # read the 4 lines of dna sequence
                     sequence += next(f).rstrip()  # Collapse to one sequence
 
-                sequence = utils.label_encode(sequence)  # input a string sequence
+                sequence = self.lb.transform(list(sequence))  # input a string sequence
                 sequence = np.transpose(sequence)
                 # append the sequence and label
 

@@ -1,5 +1,4 @@
 import torch
-from sklearn.preprocessing import LabelBinarizer
 import itertools
 
 from gensim.models import Word2Vec
@@ -7,16 +6,7 @@ from gensim.models import Word2Vec
 from torchmetrics.functional import f1_score
 
 
-bases = ["A", "C", "G", "T"]
-lb = LabelBinarizer()
-lb.fit_transform(bases)    
-
-
-def label_encode(sequence):
-    """Apply one hot encoding on a string input"""
-    return lb.transform(list(sequence))  # numpy array
-
-
+# not in use
 def kmer_embedding_encode(sequence, k):
     """
     Look into for word2vec:
@@ -25,8 +15,7 @@ def kmer_embedding_encode(sequence, k):
     """
     kmers_list = get_kmers(sequence, k)
 
-
-
+# not in use
 def get_kmers(sequence, k=6):
     """Source: https://www.reddit.com/r/learnpython/comments/16pjoz2/create_kmers_from_a_sequence/"""
     def windowed(iterable, n):
@@ -50,7 +39,6 @@ def compute_accuracy(outputs, labels):
     Example output:
         0.75
     """
-    # look into f1 score
     n_correct = (torch.round(outputs) == labels).sum().item()
     n_total = len(outputs)
     return n_correct / n_total

@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 # https://towardsdatascience.com/nlp-with-cnns-a6aa743bdc1e#:~:text=CNNs%20can%20be%20used%20for,important%20for%20any%20learning%20algorithm.
 class CNNModel(torch.nn.Module):
     def __init__(self, kernel_size, embed_dim, num_filters1, num_filters2, pool_kernel_size, hidden_dense1,
@@ -101,6 +102,7 @@ def load_CNNModel(model_save_path):
 if __name__ == "__main__":
     from dna_dataset import *
     import numpy as np
+    BATCH_SIZE = 64
     sequence = "GAGACCCTTTGGTTAGCTTTCCACGCCAAGTGGCCGTTCCAGGCAGGCAGTGTCGTCTTGGTTCAGCCAAGGTCACAGAGGGAGTGATAGCTTCCGCGCAGCCCTGGCTACGGACTCTGGGCATCTTTCCACTGCCCCGCTTGCGCCACCTGTTAGGCAGGATCGTTTTTCCTCTGGGGCAAGATCAAAATCCAGGTCCT"
     # print("length sequence", len(sequence))
     bases = ["A", "C", "G", "T"]

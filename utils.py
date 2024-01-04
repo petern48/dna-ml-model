@@ -7,29 +7,6 @@ from torchmetrics.functional import f1_score
 from sklearn.metrics import confusion_matrix
 
 
-# not in use
-def kmer_embedding_encode(sequence, k):
-    """
-    Look into for word2vec:
-    https://github.com/sw1/16s_embeddings/tree/master/code
-    Trained: dna2vec: https://github.com/pnpnpn/dna2vec 
-    """
-    kmers_list = get_kmers(sequence, k)
-
-# not in use
-def get_kmers(sequence, k=6):
-    """Source: https://www.reddit.com/r/learnpython/comments/16pjoz2/create_kmers_from_a_sequence/"""
-    def windowed(iterable, n):
-        its = itertools.tee(iterable, n)
-        for idx, it in enumerate(its):
-            for _ in range(idx):
-                next(it)
-        return zip(*its)
-    
-    return [''.join(l) for l in windowed(sequence, k)]
-    # working, returns list of substrings
-
-
 def compute_metrics(CM):
     """
     https://www.kaggle.com/code/ajinkyaabhang/implementing-acc-precision-recall-f1-from-scratch/notebook
@@ -147,3 +124,26 @@ def macro_double_soft_f1(y, y_hat, reduction='mean'): # Written in PyTorch
     if reduction == 'mean':
         macro_cost = cost.mean()
         return macro_cost
+
+
+# not in use
+def kmer_embedding_encode(sequence, k):
+    """
+    Look into for word2vec:
+    https://github.com/sw1/16s_embeddings/tree/master/code
+    Trained: dna2vec: https://github.com/pnpnpn/dna2vec 
+    """
+    kmers_list = get_kmers(sequence, k)
+
+# not in use
+def get_kmers(sequence, k=6):
+    """Source: https://www.reddit.com/r/learnpython/comments/16pjoz2/create_kmers_from_a_sequence/"""
+    def windowed(iterable, n):
+        its = itertools.tee(iterable, n)
+        for idx, it in enumerate(its):
+            for _ in range(idx):
+                next(it)
+        return zip(*its)
+    
+    return [''.join(l) for l in windowed(sequence, k)]
+    # working, returns list of substrings

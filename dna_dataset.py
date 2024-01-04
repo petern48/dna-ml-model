@@ -44,10 +44,10 @@ def read_data_file(data_file, accessible=True, labeled=True, shuffle=True):
 
             sequences.append(torch.Tensor(sequence))
 
-            if labeled != None:
+            if labeled:
                 labels.append(label)
-
-            ids.append(id)
+            else:
+                ids.append(id)
 
     if shuffle:
         if labeled:
@@ -67,47 +67,33 @@ def shuffle_lists(list1, list2):
 
 
 class DNADataset(torch.utils.data.Dataset):
-    def __init__(self, sequences, labels, ids=None):
-        """Input lists are shuffled"""
-
-        if ids == None:
-            sequences, labels = shuffle_lists(sequences, labels)
-            ids = [0] * len(sequences)
-
-        if labels == None:
-            sequences, ids = shuffle_lists(sequences, ids)
-            labels = [0] * len(sequences)
-
-        assert(len(sequences) == len(labels) == len(ids))
-
-        # self.accessible_count = 0
-        # self.not_accessible_count = 0
+    def __init__(self, sequences, list2, comp=False):
+        """Shuffles the two lists together as one unit"""
         # self.accessible_count = self.read_data_file(acc_data_path, accessible=True)
         # self.not_accessible_count = self.read_data_file(not_acc_data_path, accessible=False)
-        # assert(self.accessible_count + self.not_accessible_count == len(self.sequences))
         # self.sequences, self.labels = self.shuffle_lists(self.sequences, self.labels)
-        self.df = pd.DataFrame({
-            "sequences": sequences,
-            "labels": labels,
-            "ids": ids
-        })
+        sequences, list2 = shuffle_lists(sequences, list2)
+        self.comp = comp
+        self.sequences = sequences
+        self.list2 = list2  # either ids or labels (depending on if comp or not)
 
 
     def __getitem__(self, i):
         """Gets the ith sequence from the dataset"""
-        row = self.df.iloc[i]
-
-        batch = {
-            "sequences": row["sequences"],
-            "labels": row["labels"],
-            "ids": row["ids"]
-        }
-        return batch
+        # row = self.df.iloc[i]
+        # batch = {
+        #     "sequences": row["sequences"],  # now it should be singular
+        #     "labels": row["labels"],
+        #     "ids": row["ids"]
+        # }
+        # return self.df.iloc[i].to_dict()
+        list2_name = "id" if self.comp else "label"
+        return {"sequence": self.sequences[i], list2_name: self.list2[i]}
 
 
     def __len__(self):
-        # return len(self.labels)
-        return len(self.df.index)
+        return len(self.sequences)
+        # return len(self.df.index)
 
 
 # For testing can just run python dna_dataset.py

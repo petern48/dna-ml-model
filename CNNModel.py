@@ -45,7 +45,7 @@ class CNNModel(torch.nn.Module):
         """x is sequence input"""
         x = self.relu(self.Conv1(x))
 
-        # x = self.batch_norm(x)
+        # x = self.relu(self.batch_norm(x))   # before feeing into relu
         x = self.pool(x)
 
         x = self.relu(self.Conv2(x))
@@ -64,7 +64,8 @@ class CNNModel(torch.nn.Module):
         x = self.linear3(x)
         x = self.dropout_Dense(x)
 
-        return self.sigmoid(x)  # return value between 0 and 1
+        return x
+        # return self.sigmoid(x)  # return value between 0 and 1
 
 
 def save_CNNModel(model_save_path, model):

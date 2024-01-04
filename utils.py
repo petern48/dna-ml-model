@@ -17,17 +17,20 @@ def compute_metrics(CM):
 
     try:
         precision = tp / (tp + fp)
-    except:
+    except ZeroDivisionError:
+        print("divided by zero")
         precision = 0  # divide by 0 error
 
     try:
         recall = tp / (tp + fn)
-    except:
+    except ZeroDivisionError:
+        print("divided by zero")
         recall = 0
 
     try:
         f1 = 2 * precision * recall / (precision + recall)
-    except:
+    except ZeroDivisionError:
+        print("divided by zero")
         f1 = 0
 
     return acc_score, precision, recall, f1
@@ -58,12 +61,10 @@ def evaluate(val_loader, model, loss_fn, device):
         outputs = model(val_samples)
         val_labels = val_labels.reshape(-1, 1).float()
 
-        # val_loss = loss_fn(outputs, val_labels).item()  # change tensor to single val
-        # val_accuracy = compute_accuracy(outputs, val_labels)
         total_outputs = torch.cat((total_outputs, outputs))
         total_labels = torch.cat((total_labels, val_labels))
 
-        CM += confusion_matrix(val_labels.flatten(), get_preds(outputs).flatten())
+        CM += confusion_matrix(val_labels.cpu().flatten(), get_preds(outputs).cpu().flatten())
 
         acc_score, precision, recall, f1 = compute_metrics(CM)
 
@@ -73,7 +74,10 @@ def evaluate(val_loader, model, loss_fn, device):
 
     accuracy = n_correct / n_total
 
-    f1_2 = f1_score(total_outputs.flatten(), total_labels.flatten(), task="binary", num_classes=2).item()
+    f1_2 = f1_score(total_outputs.flatten(), total_labels.flatten(), task="binary",
+                    num_classes=2, threshold=THRESHOLD).item()
+
+    # NEWLY ADDED: untested. ^threshold
 
     try:
         assert(acc_score == accuracy)
@@ -81,6 +85,7 @@ def evaluate(val_loader, model, loss_fn, device):
     except:
         print("acc_score", acc_score, "accuracy", accuracy)
         print("f1", f1, "f1_2", f1_2)
+        raise
 
     return total_loss, accuracy, precision, recall, f1
 

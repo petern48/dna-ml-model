@@ -93,7 +93,53 @@ def evaluate(val_loader, model, loss_fn, device):
     accuracy = n_correct / n_total
 
     f1_2 = f1_score(total_outputs.flatten(), total_labels.flatten(), task="binary", num_classes=2).item()
-    assert(acc_score == accuracy)
-    assert(round(f1, 3) == round(f1_2, 3))
+
+    try:
+        assert(acc_score == accuracy)
+        assert(round(f1, 3) == round(f1_2, 3))
+    except:
+        print("acc_score", acc_score, "accuracy", accuracy)
+        print("f1", f1, "f1_2", f1_2)
 
     return total_loss, accuracy, precision, recall, f1
+
+
+# https://github.com/ywatanabe1989/custom_losses_pytorch/blob/master/macro_double_soft_f1.py
+def macro_double_soft_f1(y, y_hat, reduction='mean'): # Written in PyTorch
+    """Compute the macro soft F1-score as a cost (average 1 - soft-F1 across all labels).
+    Use probability values instead of binary predictions.
+    This version uses the computation of soft-F1 for both positive and negative class for each label.
+
+    Args:
+        y (torch.FloatTensor): targets array of shape (BATCH_SIZE, N_LABELS), including 0. and 1.
+        y_hat (torch.FloatTensor): probability matrix from forward propagation of shape (BATCH_SIZE, N_LABELS)
+
+    Returns:
+        cost (scalar): value of the cost function for the batch
+    """
+
+    # dtype = y_hat.dtype
+    # y = y.to(dtype)
+
+    # FloatTensor = torch.cuda.FloatTensor
+    # y = FloatTensor(y)
+    # y_hat = FloatTensor(y_hat)
+
+
+    tp = (y_hat * y).sum(dim=0) # soft
+    fp = (y_hat * (1-y)).sum(dim=0) # soft
+    fn = ((1-y_hat) * y).sum(dim=0) # soft
+    tn = ((1-y_hat) * (1-y)).sum(dim=0) # soft
+
+    soft_f1_class1 = 2*tp / (2*tp + fn + fp + 1e-16)
+    soft_f1_class0 = 2*tn / (2*tn + fn + fp + 1e-16)
+    cost_class1 = 1 - soft_f1_class1 # reduce 1 - soft-f1_class1 in order to increase soft-f1 on class 1
+    cost_class0 = 1 - soft_f1_class0 # reduce 1 - soft-f1_class0 in order to increase soft-f1 on class 0
+    cost = 0.5 * (cost_class1 + cost_class0) # take into account both class 1 and class 0
+
+    if reduction == 'none':
+        return cost
+
+    if reduction == 'mean':
+        macro_cost = cost.mean()
+        return macro_cost

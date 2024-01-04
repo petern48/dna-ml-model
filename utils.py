@@ -37,26 +37,30 @@ def compute_metrics(CM):
     # true negative, ... false positive, etc
     tn, tp, fp, fn = CM[0][0], CM[1][1], CM[0][1], CM[1][0]
     acc_score = (tp + tn) / (tp + tn + fp + fn)
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1 = 2 * precision * recall / (precision + recall)
+
+    try:
+        precision = tp / (tp + fp)
+    except:
+        precision = 0  # divide by 0 error
+
+    try:
+        recall = tp / (tp + fn)
+    except:
+        recall = 0
+
+    try:
+        f1 = 2 * precision * recall / (precision + recall)
+    except:
+        f1 = 0
 
     return acc_score, precision, recall, f1
 
 
-# Not in use
-def compute_accuracy(outputs, labels):
-    """
-    Computes the accuracy of a model's predictions.
-    Example input:
-        outputs: [0.7, 0.9, 0.3, 0.2]
-        labels:  [1, 1, 0, 1]
-    Example output:
-        0.75
-    """
-    n_correct = (torch.round(outputs) == labels).sum().item()
-    n_total = len(outputs)
-    return n_correct / n_total
+THRESHOLD = 0.427  # calculated in colab notebook
+def get_preds(probs):
+    probs[probs>THRESHOLD] = 1
+    probs[probs<=THRESHOLD] = 0
+    return probs  # preds
 
 
 def evaluate(val_loader, model, loss_fn, device):
@@ -82,12 +86,12 @@ def evaluate(val_loader, model, loss_fn, device):
         total_outputs = torch.cat((total_outputs, outputs))
         total_labels = torch.cat((total_labels, val_labels))
 
-        CM += confusion_matrix(val_labels.flatten(), torch.round(outputs).flatten())
+        CM += confusion_matrix(val_labels.flatten(), get_preds(outputs).flatten())
 
         acc_score, precision, recall, f1 = compute_metrics(CM)
 
         total_loss += loss_fn(outputs, val_labels).item()  # change tensor to single val
-        n_correct += (torch.round(outputs) == val_labels).sum().item()
+        n_correct += (get_preds(outputs) == val_labels).sum().item()
         n_total += len(outputs)
 
     accuracy = n_correct / n_total

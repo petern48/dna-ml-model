@@ -34,7 +34,7 @@ def compute_metrics(CM):
     return acc_score, precision, recall, f1
 
 
-THRESHOLD = 0.427  # calculated in colab notebook
+THRESHOLD = 0.70  # calculated in colab notebook
 def get_preds(probs, threshold=None):
     if threshold==None:
         threshold = THRESHOLD

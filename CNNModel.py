@@ -94,11 +94,13 @@ def save_CNNModel(model_save_path, model):
     checkpoint = {
         "kernel_size": model.kernel_size,
         "embed_dim": model.embed_dim,
-        "num_filters1": model.num_filters1,
-        "num_filters2": model.num_filters2,
+        "conv_filters": model.conv_filters,
+        # "num_filters1": model.num_filters1,
+        # "num_filters2": model.num_filters2,
         "pool_kernel_size": model.pool_kernel_size,
-        "hidden_dense1": model.hidden_dense1,
-        "hidden_dense2": model.hidden_dense2,
+        "linear_neurons": model.linear_neurons,
+        # "hidden_dense1": model.hidden_dense1,
+        # "hidden_dense2": model.hidden_dense2,
         "dropout_rate_Dense" : model.dropout_rate_Dense,
 
         'state_dict': model.state_dict()
@@ -110,11 +112,13 @@ def load_CNNModel(model_save_path):
     model = CNNModel(
         embed_dim=checkpoint["embed_dim"],
         kernel_size=checkpoint["kernel_size"],
-        num_filters1=checkpoint["num_filters1"],
-        num_filters2=checkpoint["num_filters2"],
+        conv_filters=checkpoint["conv_filters"],
+        # num_filters1=checkpoint["num_filters1"],
+        # num_filters2=checkpoint["num_filters2"],
         pool_kernel_size=checkpoint["pool_kernel_size"],
-        hidden_dense1=checkpoint["hidden_dense1"],
-        hidden_dense2=checkpoint["hidden_dense2"],
+        linear_neurons=checkpoint["linear_neurons"],
+        # hidden_dense1=checkpoint["hidden_dense1"],
+        # hidden_dense2=checkpoint["hidden_dense2"],
         dropout_rate_Dense=checkpoint["dropout_rate_Dense"]
     )
     model.load_state_dict(checkpoint['state_dict'])

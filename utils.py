@@ -11,6 +11,8 @@ def compute_metrics(CM):
     """
     # true negative, ... false positive, etc
     tn, tp, fp, fn = CM[0][0], CM[1][1], CM[0][1], CM[1][0]
+    # tpr = tp / (tp + fn)    
+    # fpr = 1 - tn / (tn + fp)
     acc_score = (tp + tn) / (tp + tn + fp + fn)
 
     if tp + fp != 0:
@@ -25,11 +27,10 @@ def compute_metrics(CM):
         print("divided by zero in recall calculation")
         recall = 0
 
-    if precision + recall != 0:
-        f1 = 2 * precision * recall / (precision + recall)
-    else:
-        print("divided by zero in f1 calculation")
+    if precision == 0 or recall == 0:
         f1 = 0
+    else:
+        f1 = 2 * precision * recall / (precision + recall)
 
     return acc_score, precision, recall, f1
 

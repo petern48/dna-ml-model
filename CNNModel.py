@@ -24,7 +24,7 @@ class CNNModel(torch.nn.Module):
         conv_filters.insert(0, embed_dim)  # add input dim at beginning of con
         self.conv_filters = conv_filters
 
-        self.Convs = [nn.Conv1d(conv_filters[i-1],conv_filters[i],self.kernel_size, padding=1) for i in range(1, len(conv_filters))]
+        self.Convs = nn.ModuleList([nn.Conv1d(conv_filters[i-1],conv_filters[i],self.kernel_size, padding=1) for i in range(1, len(conv_filters))])
         self.relu = nn.functional.relu
         self.pool = nn.MaxPool1d(self.pool_kernel_size) # stride=self.pool_kernel_size)  # led to worse results
         # self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=1)  #in_channel=1, out_channels=128, kernel_size=2)
@@ -42,7 +42,8 @@ class CNNModel(torch.nn.Module):
         linear_neurons.insert(len(linear_neurons), 1)  # Add 1 to end
         self.linear_neurons = linear_neurons
 
-        self.linears = [nn.Linear(linear_neurons[i-1], linear_neurons[i]) for i in range(1, len(linear_neurons))]
+        self.linears = nn.ModuleList([nn.Linear(linear_neurons[i-1], linear_neurons[i]) for i in range(1, len(linear_neurons))])
+        self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
 
         # self.linear1 = nn.Linear(dense_input, self.hidden_dense1)
         # if hidden_dense2 != 0:
@@ -53,8 +54,7 @@ class CNNModel(torch.nn.Module):
         # self.linear3 = nn.Linear(dense3_input, 1)
 
         # self.dropout_Conv = nn.Dropout(self.dropout_rate_Conv)
-        self.batch_norm = nn.BatchNorm1d(128)  # num_filters1 i think
-        self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
+        # self.batch_norm = nn.BatchNorm1d(128)  # num_filters1 i think
         # self.sigmoid = nn.Sigmoid()
 
     

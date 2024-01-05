@@ -4,8 +4,7 @@ from torch import nn
 
 # https://towardsdatascience.com/nlp-with-cnns-a6aa743bdc1e#:~:text=CNNs%20can%20be%20used%20for,important%20for%20any%20learning%20algorithm.
 class CNNModel(torch.nn.Module):
-    def __init__(self, kernel_size, embed_dim, num_filters1, num_filters2, pool_kernel_size, hidden_dense1,
-                 hidden_dense2, dropout_rate_Dense):
+    def __init__(self, kernel_size, embed_dim, conv_filters, pool_kernel_size, linear_neurons, dropout_rate_Dense):
         super().__init__()
 
         self.seq_length = 200
@@ -13,56 +12,79 @@ class CNNModel(torch.nn.Module):
         # could use padding to get same size output
         self.embed_dim = embed_dim
         self.kernel_size = kernel_size
-        self.num_filters1 = num_filters1
-        self.num_filters2 = num_filters2
+        # self.num_filters1 = num_filters1
+        # self.num_filters2 = num_filters2
         self.pool_kernel_size = pool_kernel_size
-        self.hidden_dense1 = hidden_dense1
-        self.hidden_dense2 = hidden_dense2
+        # self.hidden_dense1 = hidden_dense1
+        # self.hidden_dense2 = hidden_dense2
         self.dropout_rate_Dense = dropout_rate_Dense
 
         # torch.nn.Embedding(num_embeddings, embedding_dim)
 
-        self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=1)  #in_channel=1, out_channels=128, kernel_size=2)
+        conv_filters.insert(0, embed_dim)  # add input dim at beginning of con
+        self.conv_filters = conv_filters
+
+        self.Convs = [nn.Conv1d(conv_filters[i-1],conv_filters[i],self.kernel_size, padding=1) for i in range(1, len(conv_filters))]
+        self.relu = nn.functional.relu
         self.pool = nn.MaxPool1d(self.pool_kernel_size) # stride=self.pool_kernel_size)  # led to worse results
-        self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size, padding=1)
+        # self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=1)  #in_channel=1, out_channels=128, kernel_size=2)
+        # if num_filters2 != 0:
+        #     self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size, padding=1)
+        #     num_out = num_filters2
+        # else:
+        #     num_out = num_filters1
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
 
         # dense_input = batchsize * num_filters2 * 
-        dense_input = self.num_filters2 * int(self.seq_length / (2 * self.pool_kernel_size))
-        self.linear1 = nn.Linear(dense_input, self.hidden_dense1)
-        self.linear2 = nn.Linear(self.hidden_dense1, self.hidden_dense2)
+        linear_input = conv_filters[-1] * int(self.seq_length / (2 * self.pool_kernel_size))
 
-        self.linear3 = nn.Linear(self.hidden_dense2, 1)
+        linear_neurons.insert(0, linear_input)
+        linear_neurons.insert(len(linear_neurons), 1)  # Add 1 to end
+        self.linear_neurons = linear_neurons
+
+        self.linears = [nn.Linear(linear_neurons[i-1], linear_neurons[i]) for i in range(1, len(linear_neurons))]
+
+        # self.linear1 = nn.Linear(dense_input, self.hidden_dense1)
+        # if hidden_dense2 != 0:
+        #     self.linear2 = nn.Linear(self.hidden_dense1, self.hidden_dense2)
+        #     dense3_input = hidden_dense2
+        # else:
+        #     dense3_input = hidden_dense1
+        # self.linear3 = nn.Linear(dense3_input, 1)
 
         # self.dropout_Conv = nn.Dropout(self.dropout_rate_Conv)
         self.batch_norm = nn.BatchNorm1d(128)  # num_filters1 i think
         self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
-        self.relu = nn.functional.relu
-        self.sigmoid = nn.Sigmoid()
+        # self.sigmoid = nn.Sigmoid()
 
     
     def forward(self, x):
         """x is sequence input"""
-        x = self.relu(self.Conv1(x))
+        for i in range(len(self.Convs)):
+            x = self.Convs[i](x)
+            x = self.relu(x)
+            x = self.pool(x)
+        # x = self.relu(self.Conv1(x))
 
         # x = self.relu(self.batch_norm(x))   # before feeing into relu
-        x = self.pool(x)
-
-        x = self.relu(self.Conv2(x))
-        x = self.pool(x)
+        # if self.num_filters2 != 0:
+        #     x = self.relu(self.Conv2(x))
+        #     x = self.pool(x)
 
         x = self.flatten(x)  #, start_dim=1)  # start flattening after BATCH_SIZE dim
 
         # print("After flatten", x.shape)
 
-        x = self.linear1(x)
-        x = self.dropout_Dense(x)
-
-        x = self.linear2(x)
-        x = self.dropout_Dense(x)
-
-        x = self.linear3(x)
-        x = self.dropout_Dense(x)
+        for i in range(len(self.linears)):
+            x = self.linears[i](x)
+            self.dropout_Dense(x)
+        # x = self.linear1(x)
+        # x = self.dropout_Dense(x)
+        # if self.linear2 != 0:
+        #     x = self.linear2(x)
+        #     x = self.dropout_Dense(x)
+        # x = self.linear3(x)
+        # x = self.dropout_Dense(x)
 
         return x
         # return self.sigmoid(x)  # return value between 0 and 1

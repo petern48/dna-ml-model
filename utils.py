@@ -1,10 +1,8 @@
 import torch
 import itertools
 
-from gensim.models import Word2Vec
-# from torcheval.metrics.functional import multiclass_f1_score
-from torchmetrics.functional import f1_score
-from sklearn.metrics import confusion_matrix
+# from gensim.models import Word2Vec
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 
 
 def compute_metrics(CM):
@@ -15,31 +13,33 @@ def compute_metrics(CM):
     tn, tp, fp, fn = CM[0][0], CM[1][1], CM[0][1], CM[1][0]
     acc_score = (tp + tn) / (tp + tn + fp + fn)
 
-    try:
+    if tp + fp != 0:
         precision = tp / (tp + fp)
-    except ZeroDivisionError:
-        print("divided by zero")
+    else:
+        print("divided by zero in precision calculation")
         precision = 0  # divide by 0 error
 
-    try:
+    if tp + fn != 0:
         recall = tp / (tp + fn)
-    except ZeroDivisionError:
-        print("divided by zero")
+    else:
+        print("divided by zero in recall calculation")
         recall = 0
 
-    try:
+    if precision + recall != 0:
         f1 = 2 * precision * recall / (precision + recall)
-    except ZeroDivisionError:
-        print("divided by zero")
+    else:
+        print("divided by zero in f1 calculation")
         f1 = 0
 
     return acc_score, precision, recall, f1
 
 
 THRESHOLD = 0.427  # calculated in colab notebook
-def get_preds(probs):
-    probs[probs>THRESHOLD] = 1
-    probs[probs<=THRESHOLD] = 0
+def get_preds(probs, threshold=None):
+    if threshold==None:
+        threshold = THRESHOLD
+    probs[probs>threshold] = 1
+    probs[probs<=threshold] = 0
     return probs  # preds
 
 
@@ -49,10 +49,6 @@ def evaluate(val_loader, model, loss_fn, device):
     """
 
     total_loss = 0.0
-    n_total = 0.0
-    n_correct = 0.0
-    total_outputs = torch.empty(0).to(device)
-    total_labels = torch.empty(0).to(device)
     CM = 0
 
     for batch in val_loader:
@@ -61,31 +57,11 @@ def evaluate(val_loader, model, loss_fn, device):
         outputs = model(val_samples)
         val_labels = val_labels.reshape(-1, 1).float()
 
-        total_outputs = torch.cat((total_outputs, outputs))
-        total_labels = torch.cat((total_labels, val_labels))
+        total_loss += loss_fn(outputs, val_labels).item()  # change tensor to single val
 
         CM += confusion_matrix(val_labels.cpu().flatten(), get_preds(outputs).cpu().flatten())
 
-        acc_score, precision, recall, f1 = compute_metrics(CM)
-
-        total_loss += loss_fn(outputs, val_labels).item()  # change tensor to single val
-        n_correct += (get_preds(outputs) == val_labels).sum().item()
-        n_total += len(outputs)
-
-    accuracy = n_correct / n_total
-
-    f1_2 = f1_score(total_outputs.flatten(), total_labels.flatten(), task="binary",
-                    num_classes=2, threshold=THRESHOLD).item()
-
-    # NEWLY ADDED: untested. ^threshold
-
-    try:
-        assert(acc_score == accuracy)
-        assert(round(f1, 3) == round(f1_2, 3))
-    except:
-        print("acc_score", acc_score, "accuracy", accuracy)
-        print("f1", f1, "f1_2", f1_2)
-        raise
+        accuracy, precision, recall, f1 = compute_metrics(CM)
 
     return total_loss, accuracy, precision, recall, f1
 
@@ -129,6 +105,23 @@ def macro_double_soft_f1(y, y_hat, reduction='mean'): # Written in PyTorch
     if reduction == 'mean':
         macro_cost = cost.mean()
         return macro_cost
+
+
+# Google Bard
+# Assign a higher cost to misclassifying minority class instances, making the model prioritize learning from them.
+
+def weighted_binary_cross_entropy(output, target, weights=None):
+    "https://discuss.pytorch.org/t/solved-class-weight-for-bceloss/3114"
+    if weights is not None:
+        assert len(weights) == 2
+
+        loss = weights[1] * (target * torch.log(output)) + \
+               weights[0] * ((1 - target) * torch.log(1 - output))
+    else:
+        loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
+
+    return torch.neg(torch.mean(loss))
+
 
 
 # not in use

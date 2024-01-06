@@ -95,31 +95,34 @@ def save_CNNModel(model_save_path, model):
         "kernel_size": model.kernel_size,
         "embed_dim": model.embed_dim,
         "conv_filters": model.conv_filters,
-        # "num_filters1": model.num_filters1,
-        # "num_filters2": model.num_filters2,
         "pool_kernel_size": model.pool_kernel_size,
         "linear_neurons": model.linear_neurons,
+        "dropout_rate_Dense" : model.dropout_rate_Dense,
+        'state_dict': model.state_dict()
+        # "num_filters1": model.num_filters1,
+        # "num_filters2": model.num_filters2,
         # "hidden_dense1": model.hidden_dense1,
         # "hidden_dense2": model.hidden_dense2,
-        "dropout_rate_Dense" : model.dropout_rate_Dense,
 
-        'state_dict': model.state_dict()
     }
     torch.save(checkpoint, model_save_path)
 
 def load_CNNModel(model_save_path):
     checkpoint = torch.load(model_save_path)
+    checkpoint["linear_neurons"].pop(len(checkpoint["linear_neurons"]) - 1)
+    checkpoint["linear_neurons"].pop(0)
+    checkpoint["conv_filters"].pop(0)
     model = CNNModel(
         embed_dim=checkpoint["embed_dim"],
         kernel_size=checkpoint["kernel_size"],
         conv_filters=checkpoint["conv_filters"],
-        # num_filters1=checkpoint["num_filters1"],
-        # num_filters2=checkpoint["num_filters2"],
         pool_kernel_size=checkpoint["pool_kernel_size"],
         linear_neurons=checkpoint["linear_neurons"],
+        dropout_rate_Dense=checkpoint["dropout_rate_Dense"]
+        # num_filters1=checkpoint["num_filters1"],
+        # num_filters2=checkpoint["num_filters2"],
         # hidden_dense1=checkpoint["hidden_dense1"],
         # hidden_dense2=checkpoint["hidden_dense2"],
-        dropout_rate_Dense=checkpoint["dropout_rate_Dense"]
     )
     model.load_state_dict(checkpoint['state_dict'])
     return model

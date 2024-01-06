@@ -4,7 +4,7 @@ from torch import nn
 
 # https://towardsdatascience.com/nlp-with-cnns-a6aa743bdc1e#:~:text=CNNs%20can%20be%20used%20for,important%20for%20any%20learning%20algorithm.
 class CNNModel(torch.nn.Module):
-    def __init__(self, kernel_size, embed_dim, conv_filters, pool_kernel_size, linear_neurons, dropout_rate_Dense):
+    def __init__(self, kernel_size, embed_dim, conv_filters, pool_kernel_size, linear_neurons, dropout_rate_Dense, use_conv_dropout=False, out_size=1):
         super().__init__()
 
         self.seq_length = 200
@@ -21,6 +21,7 @@ class CNNModel(torch.nn.Module):
         self.conv_filters = conv_filters
 
         self.Convs = nn.ModuleList([nn.Conv1d(conv_filters[i-1],conv_filters[i],self.kernel_size, padding=1) for i in range(1, len(conv_filters))])
+        # self.batch_norms
         self.relu = nn.functional.relu
         self.pool = nn.MaxPool1d(self.pool_kernel_size) # stride=self.pool_kernel_size)  # led to worse results
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
@@ -28,12 +29,13 @@ class CNNModel(torch.nn.Module):
         linear_input = conv_filters[-1] * int(self.seq_length / (pool_kernel_size ** len(self.Convs)))
 
         linear_neurons.insert(0, linear_input)
-        linear_neurons.insert(len(linear_neurons), 1)  # Add 1 to end
+        linear_neurons.insert(len(linear_neurons), out_size)  # Add 1 to end
         self.linear_neurons = linear_neurons
 
         self.linears = nn.ModuleList([nn.Linear(linear_neurons[i-1], linear_neurons[i]) for i in range(1, len(linear_neurons))])
         self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
-
+        self.use_conv_dropout = use_conv_dropout
+        self.dropout_Conv = nn.Dropout(0.2)
         # self.batch_norm = nn.BatchNorm1d(128)  # num_filters1 i think
         self.sigmoid = nn.Sigmoid()
 
@@ -42,6 +44,8 @@ class CNNModel(torch.nn.Module):
         """x is sequence input"""
         for i in range(len(self.Convs)):
             x = self.Convs[i](x)
+            if self.use_conv_dropout:
+                x = self.dropout_Conv(x)
             x = self.relu(x)
             x = self.pool(x)
         # x = self.relu(self.batch_norm(x))   # before feeing into relu

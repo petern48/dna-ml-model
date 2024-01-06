@@ -12,11 +12,7 @@ class CNNModel(torch.nn.Module):
         # could use padding to get same size output
         self.embed_dim = embed_dim
         self.kernel_size = kernel_size
-        # self.num_filters1 = num_filters1
-        # self.num_filters2 = num_filters2
         self.pool_kernel_size = pool_kernel_size
-        # self.hidden_dense1 = hidden_dense1
-        # self.hidden_dense2 = hidden_dense2
         self.dropout_rate_Dense = dropout_rate_Dense
 
         # torch.nn.Embedding(num_embeddings, embedding_dim)
@@ -27,16 +23,9 @@ class CNNModel(torch.nn.Module):
         self.Convs = nn.ModuleList([nn.Conv1d(conv_filters[i-1],conv_filters[i],self.kernel_size, padding=1) for i in range(1, len(conv_filters))])
         self.relu = nn.functional.relu
         self.pool = nn.MaxPool1d(self.pool_kernel_size) # stride=self.pool_kernel_size)  # led to worse results
-        # self.Conv1 = nn.Conv1d(in_channels=embed_dim, out_channels=self.num_filters1, kernel_size=self.kernel_size, padding=1)  #in_channel=1, out_channels=128, kernel_size=2)
-        # if num_filters2 != 0:
-        #     self.Conv2 = nn.Conv1d(self.num_filters1, self.num_filters2, self.kernel_size, padding=1)
-        #     num_out = num_filters2
-        # else:
-        #     num_out = num_filters1
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
 
-        # dense_input = batchsize * num_filters2 * 
-        linear_input = conv_filters[-1] * int(self.seq_length / (2 * self.pool_kernel_size))
+        linear_input = conv_filters[-1] * int(self.seq_length / (pool_kernel_size ** len(self.Convs)))
 
         linear_neurons.insert(0, linear_input)
         linear_neurons.insert(len(linear_neurons), 1)  # Add 1 to end
@@ -45,49 +34,28 @@ class CNNModel(torch.nn.Module):
         self.linears = nn.ModuleList([nn.Linear(linear_neurons[i-1], linear_neurons[i]) for i in range(1, len(linear_neurons))])
         self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
 
-        # self.linear1 = nn.Linear(dense_input, self.hidden_dense1)
-        # if hidden_dense2 != 0:
-        #     self.linear2 = nn.Linear(self.hidden_dense1, self.hidden_dense2)
-        #     dense3_input = hidden_dense2
-        # else:
-        #     dense3_input = hidden_dense1
-        # self.linear3 = nn.Linear(dense3_input, 1)
-
-        # self.dropout_Conv = nn.Dropout(self.dropout_rate_Conv)
         # self.batch_norm = nn.BatchNorm1d(128)  # num_filters1 i think
-        # self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
 
-    
-    def forward(self, x):
+
+    def forward(self, x, use_sigmoid=False):
         """x is sequence input"""
         for i in range(len(self.Convs)):
             x = self.Convs[i](x)
             x = self.relu(x)
             x = self.pool(x)
-        # x = self.relu(self.Conv1(x))
-
         # x = self.relu(self.batch_norm(x))   # before feeing into relu
-        # if self.num_filters2 != 0:
-        #     x = self.relu(self.Conv2(x))
-        #     x = self.pool(x)
 
         x = self.flatten(x)  #, start_dim=1)  # start flattening after BATCH_SIZE dim
-
-        # print("After flatten", x.shape)
 
         for i in range(len(self.linears)):
             x = self.linears[i](x)
             self.dropout_Dense(x)
-        # x = self.linear1(x)
-        # x = self.dropout_Dense(x)
-        # if self.linear2 != 0:
-        #     x = self.linear2(x)
-        #     x = self.dropout_Dense(x)
-        # x = self.linear3(x)
-        # x = self.dropout_Dense(x)
+
+        if use_sigmoid == True:
+            x = self.sigmoid(x) # return value between 0 and 1
 
         return x
-        # return self.sigmoid(x)  # return value between 0 and 1
 
 
 def save_CNNModel(model_save_path, model):
@@ -143,29 +111,35 @@ if __name__ == "__main__":
     encoded = np.tile(encoded, (BATCH_SIZE, 1, 1))  # stack batch_size copies of encoding together
     encoded = torch.Tensor(encoded)
     # print(encoded.shape)
-    model = CNNModel(
-                    kernel_size=2,
-                    embed_dim=4,
-                    num_filters1=128,
-                    num_filters2=64,
-                    pool_kernel_size=2,
-                    hidden_dense1=128,
-                    hidden_dense2=64,
-                    dropout_rate_Dense=0.5
-    )
-    x = model(encoded)
-    print(x.shape)
-    raise
-    train_dataset = DNADataset(ACCESSIBLE_FILE, ACCESSIBLE_FILE)
-    # model = CNNModel(embed_dim=4)
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=BATCH_SIZE, shuffle=True
-    )
-    for batch in train_loader:
-        output = model(batch["sequence"])
+    conv_filters = [128,64,32]
+    linear_neurons = [64, 32]
+    conv_filters.insert(0, 4)  # add input dim at beginning of con
+    conv_filters = conv_filters
+    pool_kernel_size = 2
+    Convs = nn.ModuleList([nn.Conv1d(conv_filters[i-1],conv_filters[i],3, padding=1) for i in range(1, len(conv_filters))])
+    relu = nn.functional.relu
+    pool = nn.MaxPool1d(pool_kernel_size) # stride=self.pool_kernel_size)  # led to worse results
+    flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
+    # dense_input = batchsize * num_filters2 *
+    linear_input = conv_filters[-1] * int(200 / (pool_kernel_size ** len(Convs)))
 
-        print(output)
-        sys.exit()
+    linear_neurons.insert(0, linear_input)
+    linear_neurons.insert(len(linear_neurons), 1)  # Add 1 to end
+
+    linears = nn.ModuleList([nn.Linear(linear_neurons[i-1], linear_neurons[i]) for i in range(1, len(linear_neurons))])
+    print(encoded.shape)
+    for i in range(len(Convs)):
+        encoded = Convs[i](encoded)
+        encoded = relu(encoded)
+        encoded = pool(encoded)
+        print(encoded.shape)
+    encoded = flatten(encoded)
+    print("lin input", linear_input)
+    print(encoded.shape)
+    for i in range(len(Convs)):
+        encoded = linears[i](encoded)
+        print(encoded.shape)
+
 
 # https://medium.com/analytics-vidhya/predicting-genes-with-cnn-bdf278504e79
 # model = Sequential()

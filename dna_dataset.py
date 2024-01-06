@@ -17,6 +17,8 @@ bases = ["A", "C", "G", "T"]
 lb = LabelBinarizer()
 lb.fit_transform(bases)
 
+# lb = OneHotEncoder()
+# lb.fit([["A", 1]])
 
 def read_data_file(data_file, accessible=True, labeled=True, shuffle=True):
 

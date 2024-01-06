@@ -58,7 +58,12 @@ def evaluate(val_loader, model, loss_fn, device):
         outputs = model(val_samples)
         val_labels = val_labels.reshape(-1, 1).float()
 
-        total_loss += loss_fn(outputs, val_labels).item()  # change tensor to single val
+        # if loss_fn.__class__.__name__ == "function" and loss_fn.__name__ == "weighted_binary_cross_entropy":
+        #     loss = loss_fn(outputs, labels, [weight_class0, weight_class1])
+        # else:
+        loss = loss_fn(outputs, val_labels, reduction="mean")
+
+        total_loss += loss.item()  # change tensor to single val
 
         CM += confusion_matrix(val_labels.cpu().flatten(), get_preds(outputs).cpu().flatten())
 

@@ -2,7 +2,7 @@ import torch
 import itertools
 
 # from gensim.models import Word2Vec
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix
 
 
 def compute_metrics(CM):
@@ -88,7 +88,6 @@ def macro_double_soft_f1(y, y_hat, reduction='mean'): # Written in PyTorch
     # y = FloatTensor(y)
     # y_hat = FloatTensor(y_hat)
 
-
     tp = (y_hat * y).sum(dim=0) # soft
     fp = (y_hat * (1-y)).sum(dim=0) # soft
     fn = ((1-y_hat) * y).sum(dim=0) # soft
@@ -122,6 +121,19 @@ def weighted_binary_cross_entropy(output, target, weights=None):
         loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
 
     return torch.neg(torch.mean(loss))
+
+
+# https://stackoverflow.com/questions/65318064/can-i-trainoptimize-on-f1-score-loss-with-pytorch
+def f1_loss(y_pred, y_true):
+    tp = torch.sum((y_true * y_pred).float(), dim=0)
+    tn = torch.sum(((1 - y_true) * (1 - y_pred)).float(), dim=0)
+    fp = torch.sum(((1 - y_true) * y_pred).float(), dim=0)
+    fn = torch.sum((y_true * (1 - y_pred)).float(), dim=0)
+    p = tp / (tp + fp + 1e-7)
+    r = tp / (tp + fn + 1e-7)
+    f1 = 2 * p * r / (p + r + 1e-7)
+    f1 = torch.where(torch.isnan(f1), torch.zeros_like(f1), f1)
+    return 1 - torch.mean(f1)
 
 
 

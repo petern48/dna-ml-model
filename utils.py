@@ -61,7 +61,7 @@ def evaluate(val_loader, model, loss_fn, device):
         # if loss_fn.__class__.__name__ == "function" and loss_fn.__name__ == "weighted_binary_cross_entropy":
         #     loss = loss_fn(outputs, labels, [weight_class0, weight_class1])
         # else:
-        loss = loss_fn(outputs, val_labels, reduction="mean")
+        loss = loss_fn(outputs, val_labels) #, reduction="mean")
 
         total_loss += loss.item()  # change tensor to single val
 

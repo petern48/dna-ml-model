@@ -1,1 +1,2 @@
 # dna-ml-model
+This project is a machine learning model for predicting if a given DNA sequence is chromatin accessible. It is part of an on-going Computational Biology Hackathon (formatted similarly to a Kaggle competition). The task is dificult because of the strong imbalance in both the dataset and the testing data. As a results, metrics such as F1-score, precision, and recall are being used to evaluate the model during training. The model is still being refined for better results, and this README.md will be updated later on.

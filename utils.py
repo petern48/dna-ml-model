@@ -1,6 +1,6 @@
 import torch
 import itertools
-
+import numpy as np
 # from gensim.models import Word2Vec
 from sklearn.metrics import confusion_matrix
 
@@ -139,6 +139,21 @@ def f1_loss(y_pred, y_true):
     f1 = 2 * p * r / (p + r + 1e-7)
     f1 = torch.where(torch.isnan(f1), torch.zeros_like(f1), f1)
     return 1 - torch.mean(f1)
+
+
+def seq_to_kspec(seq, K=6):
+    "https://github.com/kimmo1019/Deopen/tree/master"
+    encoding_matrix = {'a':0, 'A':0, 'c':1, 'C':1, 'g':2, 'G':2, 't':3, 'T':3, 'n':0, 'N':0}
+    kspec_vec = np.zeros((4**K,1))
+    for i in range(len(seq)-K+1):
+        sub_seq = seq[i:(i+K)]
+        index = 0
+        for j in range(K):
+            index += encoding_matrix[sub_seq[j]]*(4**(K-j-1))
+        kspec_vec[index] += 1
+    return kspec_vec
+# (4096, 1)
+
 
 
 

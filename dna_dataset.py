@@ -4,7 +4,7 @@ import random
 import sys
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
 import numpy as np
-# import utils
+import utils
 import pandas as pd
 
 
@@ -20,7 +20,7 @@ lb.fit_transform(bases)
 # lb = OneHotEncoder()
 # lb.fit([["A", 1]])
 
-def read_data_file(data_file, accessible=True, labeled=True, shuffle=True):
+def read_data_file(data_file, accessible=True, labeled=True, shuffle=True, hybrid=False):
 
     label = ACCESSIBLE_LABEL if accessible else NOT_ACCESSIBLE_LABEL
     if not labeled:
@@ -36,15 +36,31 @@ def read_data_file(data_file, accessible=True, labeled=True, shuffle=True):
                 id = next(f)[1:].rstrip()   # accessible47239  or seq1
             except StopIteration:
                 break
-            sequence = ""
+            seq = ""
 
             for _ in range(LINES_PER_SEQUENCE):  # read the 4 lines of dna sequence
-                sequence += next(f).rstrip()  # Collapse to one sequence
+                seq += next(f).rstrip()  # Collapse to one sequence
 
-            sequence = lb.transform(list(sequence))  # input a string sequence
-            sequence = np.transpose(sequence)
+            one_hot = lb.transform(list(seq))  # input a string sequence
+            one_hot = np.transpose(one_hot)
 
-            sequences.append(torch.Tensor(sequence))
+            # print(f"kmers {kmers.shape}")
+
+            if hybrid:
+                embed_dim = 4
+                kmers = utils.seq_to_kspec(seq)
+
+                kmers = kmers.reshape(embed_dim, int(kmers.shape[0] / embed_dim))
+                # print(one_hot.shape)
+                # originally for batch size i think
+
+                x = np.concatenate((one_hot, kmers), axis=1)  # SPLITDIM=2
+
+                x = torch.Tensor(x).float()  # should be moved to device later
+                sequences.append(x)
+
+            else:
+                sequences.append(torch.Tensor(one_hot))
 
             if labeled:
                 labels.append(label)
@@ -75,7 +91,7 @@ class DNADataset(torch.utils.data.Dataset):
         # self.not_accessible_count = self.read_data_file(not_acc_data_path, accessible=False)
         # self.sequences, self.labels = self.shuffle_lists(self.sequences, self.labels)
         sequences, list2 = shuffle_lists(sequences, list2)
-        self.comp = comp
+        self.comp = comp  # whether it is the comp dataset or not
         self.sequences = sequences
         self.list2 = list2  # either ids or labels (depending on if comp or not)
 

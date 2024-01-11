@@ -17,22 +17,24 @@ class CNNModel(torch.nn.Module):
 
         # torch.nn.Embedding(num_embeddings, embedding_dim)
 
-        conv_filters.insert(0, embed_dim)  # add input dim at beginning of con
         self.conv_filters = conv_filters
+        all_conv_filters = conv_filters.copy()
+        all_conv_filters.insert(0, embed_dim)  # add input dim at beginning of con
 
-        self.Convs = nn.ModuleList([nn.Conv1d(conv_filters[i-1],conv_filters[i],self.kernel_size, padding=1) for i in range(1, len(conv_filters))])
+        self.Convs = nn.ModuleList([nn.Conv1d(all_conv_filters[i-1],all_conv_filters[i],self.kernel_size, padding=1) for i in range(1, len(all_conv_filters))])
         # self.batch_norms
         self.relu = nn.functional.relu
         self.pool = nn.MaxPool1d(self.pool_kernel_size) # stride=self.pool_kernel_size)  # led to worse results
         self.flatten = nn.Flatten(start_dim=1)  # start flattening after 1st (BATCH_SIZE) dim
 
-        linear_input = conv_filters[-1] * int(self.seq_length / (pool_kernel_size ** len(self.Convs)))
+        linear_input = all_conv_filters[-1] * int(self.seq_length / (pool_kernel_size ** len(self.Convs)))
 
-        linear_neurons.insert(0, linear_input)
-        linear_neurons.insert(len(linear_neurons), out_size)  # Add 1 to end
         self.linear_neurons = linear_neurons
+        all_linear_neurons = linear_neurons.copy()  # Add the begin and end dims
+        all_linear_neurons.insert(0, linear_input)
+        all_linear_neurons.insert(len(all_linear_neurons), out_size)  # Add 1 to end
 
-        self.linears = nn.ModuleList([nn.Linear(linear_neurons[i-1], linear_neurons[i]) for i in range(1, len(linear_neurons))])
+        self.linears = nn.ModuleList([nn.Linear(all_linear_neurons[i-1], all_linear_neurons[i]) for i in range(1, len(all_linear_neurons))])
         self.dropout_Dense = nn.Dropout(self.dropout_rate_Dense)
         self.use_conv_dropout = use_conv_dropout
         self.dropout_Conv = nn.Dropout(0.2)
@@ -56,7 +58,7 @@ class CNNModel(torch.nn.Module):
             x = self.linears[i](x)
             self.dropout_Dense(x)
 
-        if use_sigmoid == True:
+        if use_sigmoid:
             x = self.sigmoid(x) # return value between 0 and 1
 
         return x
@@ -71,19 +73,15 @@ def save_CNNModel(model_save_path, model):
         "linear_neurons": model.linear_neurons,
         "dropout_rate_Dense" : model.dropout_rate_Dense,
         'state_dict': model.state_dict()
-        # "num_filters1": model.num_filters1,
-        # "num_filters2": model.num_filters2,
-        # "hidden_dense1": model.hidden_dense1,
-        # "hidden_dense2": model.hidden_dense2,
 
     }
     torch.save(checkpoint, model_save_path)
 
 def load_CNNModel(model_save_path):
     checkpoint = torch.load(model_save_path)
-    checkpoint["linear_neurons"].pop(len(checkpoint["linear_neurons"]) - 1)
-    checkpoint["linear_neurons"].pop(0)
-    checkpoint["conv_filters"].pop(0)
+    # checkpoint["linear_neurons"].pop(len(checkpoint["linear_neurons"]) - 1)
+    # checkpoint["linear_neurons"].pop(0)
+    # checkpoint["conv_filters"].pop(0)
     model = CNNModel(
         embed_dim=checkpoint["embed_dim"],
         kernel_size=checkpoint["kernel_size"],
@@ -91,10 +89,6 @@ def load_CNNModel(model_save_path):
         pool_kernel_size=checkpoint["pool_kernel_size"],
         linear_neurons=checkpoint["linear_neurons"],
         dropout_rate_Dense=checkpoint["dropout_rate_Dense"]
-        # num_filters1=checkpoint["num_filters1"],
-        # num_filters2=checkpoint["num_filters2"],
-        # hidden_dense1=checkpoint["hidden_dense1"],
-        # hidden_dense2=checkpoint["hidden_dense2"],
     )
     model.load_state_dict(checkpoint['state_dict'])
     return model

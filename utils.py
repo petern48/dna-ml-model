@@ -2,7 +2,7 @@ import torch
 import itertools
 import numpy as np
 # from gensim.models import Word2Vec
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score
 
 
 def compute_metrics(CM):
@@ -51,6 +51,8 @@ def evaluate(val_loader, model, loss_fn, device):
 
     total_loss = 0.0
     CM = 0
+    total_probs = np.empty(0)
+    total_labels = np.empty(0)
 
     for batch in val_loader:
         val_samples, val_labels = batch['sequence'].to(device), batch['label'].to(device)
@@ -67,9 +69,14 @@ def evaluate(val_loader, model, loss_fn, device):
 
         CM += confusion_matrix(val_labels.cpu().flatten(), get_preds(outputs).cpu().flatten())
 
-        accuracy, precision, recall, f1 = compute_metrics(CM)
+        total_probs = np.concatenate((total_probs, outputs.flatten().cpu().detach().numpy()))
+        total_labels = np.concatenate((total_labels, val_labels.flatten().cpu().detach().numpy()))
 
-    return total_loss, accuracy, precision, recall, f1
+    roc_auc = roc_auc_score(total_labels, total_probs)
+
+    accuracy, precision, recall, f1 = compute_metrics(CM)
+
+    return total_loss, accuracy, precision, recall, f1, roc_auc
 
 
 # https://github.com/ywatanabe1989/custom_losses_pytorch/blob/master/macro_double_soft_f1.py
@@ -112,8 +119,6 @@ def macro_double_soft_f1(y, y_hat, reduction='mean'): # Written in PyTorch
         return macro_cost
 
 
-# Google Bard
-# Assign a higher cost to misclassifying minority class instances, making the model prioritize learning from them.
 
 def weighted_binary_cross_entropy(output, target, weights=None):
     "https://discuss.pytorch.org/t/solved-class-weight-for-bceloss/3114"

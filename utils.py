@@ -2,7 +2,7 @@ import torch
 import itertools
 import numpy as np
 # from gensim.models import Word2Vec
-from sklearn.metrics import confusion_matrix, roc_auc_score
+from sklearn.metrics import confusion_matrix, roc_auc_score, average_precision_score
 
 
 def compute_metrics(CM):
@@ -35,7 +35,7 @@ def compute_metrics(CM):
     return acc_score, precision, recall, f1
 
 
-THRESHOLD = 0.70  # calculated in colab notebook
+THRESHOLD = 0.93 # TODO update  # calculated in colab notebook
 def get_preds(probs, threshold=None):
     if threshold==None:
         threshold = THRESHOLD
@@ -72,11 +72,12 @@ def evaluate(val_loader, model, loss_fn, device):
         total_probs = np.concatenate((total_probs, outputs.flatten().cpu().detach().numpy()))
         total_labels = np.concatenate((total_labels, val_labels.flatten().cpu().detach().numpy()))
 
-    roc_auc = roc_auc_score(total_labels, total_probs)
+    # roc_auc = roc_auc_score(total_labels, total_probs)
+    pr_auc = average_precision_score(total_labels, total_probs)
 
     accuracy, precision, recall, f1 = compute_metrics(CM)
 
-    return total_loss, accuracy, precision, recall, f1, roc_auc
+    return total_loss, accuracy, precision, recall, f1, pr_auc
 
 
 # https://github.com/ywatanabe1989/custom_losses_pytorch/blob/master/macro_double_soft_f1.py

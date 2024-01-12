@@ -12,7 +12,7 @@ LINES_PER_SEQUENCE = 4
 ACCESSIBLE_LABEL = 1
 NOT_ACCESSIBLE_LABEL = 0
 
-rand = random.Random(1)
+# rand = random.Random(1)
 bases = ["A", "C", "G", "T"]
 lb = LabelBinarizer()
 lb.fit_transform(bases)
@@ -20,7 +20,7 @@ lb.fit_transform(bases)
 # lb = OneHotEncoder()
 # lb.fit([["A", 1]])
 
-def read_data_file(data_file, accessible=True, labeled=True, shuffle=True, hybrid=False):
+def read_data_file(data_file, accessible=True, labeled=True, shuffle=True, hybrid_k=None):
 
     label = ACCESSIBLE_LABEL if accessible else NOT_ACCESSIBLE_LABEL
     if not labeled:
@@ -46,9 +46,9 @@ def read_data_file(data_file, accessible=True, labeled=True, shuffle=True, hybri
 
             # print(f"kmers {kmers.shape}")
 
-            if hybrid:
+            if hybrid_k != None:  # hybrid_k should be an int for kmers
                 embed_dim = 4
-                kmers = utils.seq_to_kspec(seq)
+                kmers = utils.seq_to_kspec(seq, K=hybrid_k)
 
                 kmers = kmers.reshape(embed_dim, int(kmers.shape[0] / embed_dim))
                 # print(one_hot.shape)
@@ -79,7 +79,9 @@ def read_data_file(data_file, accessible=True, labeled=True, shuffle=True, hybri
 def shuffle_lists(list1, list2):
     """Shuffle the two input lists together as one unit"""
     zipped = list(zip(list1, list2))
-    rand.shuffle(zipped)
+    random.seed(1)
+    random.shuffle(zipped)
+    # rand.shuffle(zipped)
     list1, list2 = zip(*zipped)
     return list(list1), list(list2)
 

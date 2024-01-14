@@ -2,9 +2,6 @@
 Files/
 pretrained/
 wandb/
-runs/
-submitted/
-nbt3300-code/
 __pycache__/
 *.py[cod]
 *$py.class

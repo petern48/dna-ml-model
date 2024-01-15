@@ -77,8 +77,8 @@ def save_CNNModel(model_save_path, model):
     }
     torch.save(checkpoint, model_save_path)
 
-def load_CNNModel(model_save_path):
-    checkpoint = torch.load(model_save_path)
+def load_CNNModel(model_save_path, device):
+    checkpoint = torch.load(model_save_path, map_location=device)
     # checkpoint["linear_neurons"].pop(len(checkpoint["linear_neurons"]) - 1)
     # checkpoint["linear_neurons"].pop(0)
     # checkpoint["conv_filters"].pop(0)

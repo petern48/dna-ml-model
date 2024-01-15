@@ -79,8 +79,8 @@ def save_HybridModel(model_save_path, model):
     torch.save(ckpt, model_save_path)
 
 
-def load_HybridModel(model_save_path):
-    ckpt = torch.load(model_save_path)
+def load_HybridModel(model_save_path, device):
+    ckpt = torch.load(model_save_path, map_location=device)
     model = HybridModel(
             kernel_size=ckpt["kernel_size"],
             embed_dim=ckpt["embed_dim"],

@@ -1,6 +1,6 @@
 # dna-ml-model
 
-This project won 2nd place in a Computational Biology "Hackathon" (formatted more like a Kaggle competition). It is a machine learning model for predicting if a given DNA sequence is chromatin accessible. The task was dificult because of the strong imbalance in both the dataset and the testing data. This README.md explains my approach. The model is still being refined for better results, and this README.md will be updated later on.
+This project won 2nd place in a Computational Biology "Hackathon" (despite the name, it was formatted more like a Kaggle competition). It is a machine learning model for predicting if a given DNA sequence is chromatin accessible. The task was dificult because of the strong imbalance in both the dataset and the testing data. This README.md explains two different architecures I experimented with: Hybrid and CNN.
 
 
 ### Methods
@@ -19,7 +19,8 @@ The feed forward network instead takes k-mer encoding as input. k-mer's are a co
 
 The two are then concatenated to learn based on both the patterns and the counts. After training, this model achieved a score of 7573, identifying 7573 of the 10,000 accessible sequences, given 269,315 sequences to choose from. While the following model achieved a better performance, this model architecture is a notable one.
 
-![Slide for visualizing the Hybrid Architecture and k-mer representation](https://vscode-remote+wsl-002bubuntu.vscode-resource.vscode-cdn.net/home/petern/Documents-WSL/dna-ml-model/images/hybrid-slide.png)Inspiration of the model architecture and the diagram representing it on the right was taken from the following research paper: [Chromatin accessibility prediction via a hybrid deep convolutional neural network](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6192215/)
+![Slide for visualizing the Hybrid Architecture and k-mer representation](images/hybrid-slide.png)  
+Inspiration of the model architecture and the diagram representing it on the right was taken from the following research paper: [Chromatin accessibility prediction via a hybrid deep convolutional neural network](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6192215/)
 
 ![Graphs of Hybrid metrics during training](images/hybrid-wandb-stats.png)
 
@@ -33,4 +34,4 @@ It appears that for this case, the ordering of the bases is more important and t
 
 ![Slide for visualizing the CNN Architecture and one-hot representation](images/cnn-slide.png)
 
-![Graphs of Hybrid metrics during training]()
+![Graphs of Hybrid metrics during training](images/cnn-wandb-stats.png)

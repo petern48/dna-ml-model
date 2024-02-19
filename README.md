@@ -1,6 +1,6 @@
 # dna-ml-model
 
-This project won 2nd place in a Computational Biology "Hackathon" (despite the name, it was formatted more like a Kaggle competition). It is a machine learning model for predicting if a given DNA sequence is chromatin accessible. The task was dificult because of the strong imbalance in both the dataset and the testing data. This README.md explains two different architecures I experimented with: Hybrid and CNN.
+This project won 2nd place in a machine learning / computational biology hackathon (despite the name "hackathon", it lasted many weeks and was formatted more like a Kaggle competition). It is a deep learning model for predicting if a given DNA sequence is chromatin accessible. The task was dificult because of the strong imbalance in both the training and the testing data. This README.md explains two different architecures I experimented with: Hybrid and CNN.
 
 
 ### Methods
